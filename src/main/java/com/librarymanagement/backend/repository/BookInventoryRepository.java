@@ -3,6 +3,7 @@ package com.librarymanagement.backend.repository;
 import com.librarymanagement.backend.entity.BookInventory;
 import com.librarymanagement.backend.entity.BookStatus;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -38,6 +39,7 @@ public interface BookInventoryRepository extends JpaRepository<BookInventory, Lo
      * @param bookId the ID of the book title
      * @return list of all inventory copies for that book
      */
+    @EntityGraph(attributePaths = {"book"})
     List<BookInventory> findByBookId(Long bookId);
 
     /**
@@ -49,6 +51,7 @@ public interface BookInventoryRepository extends JpaRepository<BookInventory, Lo
      * @param status typically BookStatus.AVAILABLE
      * @return list of copies with the given status
      */
+    @EntityGraph(attributePaths = {"book"})
     List<BookInventory> findByBookIdAndStatus(Long bookId, BookStatus status);
 
     /**

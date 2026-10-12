@@ -16,6 +16,8 @@ public class BookResponse {
     private LocalDate publicationDate;
     private String category;
     private BookStatus status;
+    private Long totalCopies;
+    private Long availableCopies;
 
     public BookResponse() {
     }
@@ -30,6 +32,12 @@ public class BookResponse {
         this.publicationDate = book.getPublicationDate();
         this.category = book.getCategory();
         this.status = book.getStatus();
+    }
+
+    public BookResponse(Book book, Long totalCopies, Long availableCopies) {
+        this(book);
+        this.totalCopies = totalCopies;
+        this.availableCopies = availableCopies;
     }
 
     // Getters and Setters
@@ -60,4 +68,10 @@ public class BookResponse {
 
     public BookStatus getStatus() { return status; }
     public void setStatus(BookStatus status) { this.status = status; }
+
+    public Long getTotalCopies() { return totalCopies; }
+    public void setTotalCopies(Long totalCopies) { this.totalCopies = totalCopies; }
+
+    public Long getAvailableCopies() { return availableCopies; }
+    public void setAvailableCopies(Long availableCopies) { this.availableCopies = availableCopies; }
 }

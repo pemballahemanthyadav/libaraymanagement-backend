@@ -11,7 +11,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
+@Transactional(readOnly = true)
 public class BookService {
 
     private final BookRepository bookRepository;
@@ -23,21 +26,21 @@ public class BookService {
     }
 
     public Page<BookResponse> getAllBooks(Pageable pageable) {
-        return bookRepository.findAll(pageable).map(BookResponse::new);
+        return bookRepository.findAll(pageable).map(this::toBookResponse);
     }
 
     public Page<BookResponse> searchBooks(String keyword, Pageable pageable) {
-        return bookRepository.searchBooks(keyword, pageable).map(BookResponse::new);
+        return bookRepository.searchBooks(keyword, pageable).map(this::toBookResponse);
     }
 
     public Page<BookResponse> getBooksByCategory(String category, Pageable pageable) {
-        return bookRepository.findByCategoryIgnoreCase(category, pageable).map(BookResponse::new);
+        return bookRepository.findByCategoryIgnoreCase(category, pageable).map(this::toBookResponse);
     }
 
     public BookResponse getBookById(Long id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new com.librarymanagement.backend.exception.ResourceNotFoundException("Book", id));
-        return new BookResponse(book);
+        return toBookResponse(book);
     }
 
     public BookAvailabilityResponse getBookAvailability(Long id) {
@@ -50,6 +53,7 @@ public class BookService {
         return new BookAvailabilityResponse(id, totalCopies, availableCopies);
     }
 
+    @Transactional
     public BookResponse addBook(BookRequest request) {
         if (bookRepository.existsByIsbn(request.getIsbn())) {
             throw new com.librarymanagement.backend.exception.DuplicateResourceException("Book with ISBN " + request.getIsbn() + " already exists");
@@ -57,9 +61,10 @@ public class BookService {
 
         Book book = new Book();
         updateBookFromRequest(book, request);
-        return new BookResponse(bookRepository.save(book));
+        return toBookResponse(bookRepository.save(book));
     }
 
+    @Transactional
     public BookResponse updateBook(Long id, BookRequest request) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new com.librarymanagement.backend.exception.ResourceNotFoundException("Book", id));
@@ -70,9 +75,10 @@ public class BookService {
         }
 
         updateBookFromRequest(book, request);
-        return new BookResponse(bookRepository.save(book));
+        return toBookResponse(bookRepository.save(book));
     }
 
+    @Transactional
     public void changeBookStatus(Long id, BookStatus status) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new com.librarymanagement.backend.exception.ResourceNotFoundException("Book", id));
@@ -80,6 +86,7 @@ public class BookService {
         bookRepository.save(book);
     }
 
+    @Transactional
     public void deleteBook(Long id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new com.librarymanagement.backend.exception.ResourceNotFoundException("Book", id));
@@ -90,6 +97,12 @@ public class BookService {
         }
         
         bookRepository.delete(book);
+    }
+
+    private BookResponse toBookResponse(Book book) {
+        long totalCopies = bookInventoryRepository.findByBookId(book.getId()).size();
+        long availableCopies = bookInventoryRepository.countByBookIdAndStatus(book.getId(), BookStatus.AVAILABLE);
+        return new BookResponse(book, totalCopies, availableCopies);
     }
 
     private void updateBookFromRequest(Book book, BookRequest request) {

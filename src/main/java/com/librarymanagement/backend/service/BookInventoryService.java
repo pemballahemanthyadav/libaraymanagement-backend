@@ -8,11 +8,13 @@ import com.librarymanagement.backend.entity.BookStatus;
 import com.librarymanagement.backend.repository.BookInventoryRepository;
 import com.librarymanagement.backend.repository.BookRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class BookInventoryService {
 
     private final BookInventoryRepository bookInventoryRepository;
@@ -23,6 +25,7 @@ public class BookInventoryService {
         this.bookRepository = bookRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<BookInventoryResponse> getCopiesForBook(Long bookId) {
         return bookInventoryRepository.findByBookId(bookId).stream()
                 .map(BookInventoryResponse::new)
